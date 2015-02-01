@@ -44,14 +44,11 @@ impl<A, B, I, J> Iterator for Product<A, B, I, J> where
 {
     type Item = (A, B);
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        loop {
-            match self.cur_a.as_ref() {
-                None => return None,
-                Some(x) => {
-                    for y in self.iter_b {
-                        return Some((x.clone(), y.clone()))
-                    }
-                }
+        loop { // This loops infinitely if self.iter_b is empty
+            match (self.cur_a.as_ref(), self.iter_b.next()) {
+                (Some(x), Some(y)) => return Some((x.clone(), y.clone())),
+                (None, _) => return None,
+                _ => {}
             }
             self.cur_a = self.iter_a.next();
             self.iter_b = self.iter_b_const.clone();
