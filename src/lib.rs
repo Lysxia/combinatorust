@@ -1,6 +1,66 @@
-// TODO
+use std::*;
+
 // - Combinations
-pub struct Combinations<T>;
+// The i-th cell of dest can contain an element from src with index
+// j between i and n-k+i. indices[i] records the difference n-k+i-j.
+// The Option distinguishes the first call to .next() which initializes
+// dest, and the subsequent ones, which modify dest before returning it
+// as a slice.
+pub struct Combinations<'a, T> where T: 'a
+{
+    src: &'a [T],
+    dest_opt: Option<Vec<T>>,
+    indices: Vec<usize>,
+}
+
+pub trait CombinationsIterator<T>
+{
+    fn iter_comb<'a>(&'a self, k: usize) -> Combinations<'a, T>;
+}
+
+impl<'t, T> CombinationsIterator<T> for &'t [T] where T: 't + Clone
+{
+    fn iter_comb<'a>(&'a self, k: usize) -> Combinations<'a, T> {
+        let is = iter::repeat(self.len()-k).take(k).collect::<Vec<usize>>();
+        Combinations {
+            src: *self,
+            dest_opt: None,
+            indices: is,
+        }
+    }
+}
+
+impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone
+{
+    type Item = &'b [T];
+    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
+        let Combinations {
+            src,
+            ref mut dest_opt,
+            ref mut indices,
+        } = *self;
+        let n = src.len();
+        let k = indices.len();
+        let mut dest = match dest_opt.clone() {
+            None => {
+                let dest = &src[..k];
+                *dest_opt = Some(dest.to_vec());
+                return Some(dest) },
+            Some(dest) => dest };
+        let i_opt = indices.iter().rposition(|&j| { j != 0 });
+        match i_opt {
+            None => None,
+            Some(i) => {
+                let ii = indices[i];
+                let m = n-ii;
+                let r = m-k+i..m;
+                for j in indices[i..].iter_mut() { *j = ii-1; }
+                (&mut dest[i..]).clone_from_slice(&(self.src)[r]);
+                Some(&dest[])
+            }
+        }
+    }
+}
 
 // - Sub-sets/sequences (more efficient than counter to 2^n and gives
 // directly the subsequence as a vector)
@@ -23,11 +83,11 @@ pub trait ProductIterator<A, B, J>: Sized + Iterator<Item=A> where
 {
     fn iter_mult(mut self, j: J) -> Product<A, B, Self, J>
     {
-        return Product {
+        Product {
             iter_b_const: j.clone(),
             cur_a: self.next(),
             iter_a: self,
-            iter_b: j.clone() }
+            iter_b: j }
     }
 }
 
@@ -57,6 +117,16 @@ impl<A, B, I, J> Iterator for Product<A, B, I, J> where
 }
 
 // - Partitions
+
+#[test]
+fn combination_size() {
+    let n = 6us;
+    let k = 3us;
+    let v = (0..n).collect::<Vec<usize>>();
+    let s = &v[];
+    let c = s.iter_comb(k);
+    assert![c.count() == 20];
+}
 
 #[test]
 fn product_size() {
