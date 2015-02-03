@@ -1,6 +1,7 @@
 use std::*;
+use std::slice::ElementSwaps;
 
-/// Iterator for combinations of k elements in a list of n
+/// An iterator that iterates through combinations of k elements in a list of n
 // The i-th cell of dest can contain an element from src with index
 // j between i and n-k+i. indices[i] records the difference n-k+i-j.
 // The Option distinguishes the first call to .next() which initializes
@@ -32,12 +33,14 @@ impl<'t, T> CombinationsIterator<T> for &'t [T] where T: 't + Clone
     }
 }
 
-/// Iterate through all combinations of k elements.
+/// Iterate through combinations of k elements.
 ///
 /// Each iteration yields a slice of length `k` with distinct elements from the
 /// stored sequence in the same order. If `n` is the length of the source slice,
 /// there are (`n` choose `k`) combinations.
-/// Calls to `.next()` after `None` was output give undefined result.
+///
+/// Calls to `.next()` after `None` has been output give undefined results.
+/// (In practice, currently, it keeps returning `None`)
 impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone
 {
     type Item = &'b [T];
@@ -95,6 +98,7 @@ impl<'t, T> SubsequencesIterator<T> for &'t [T] where T: 't {
 /// Iterate through the subsequences of a stored sequence.
 ///
 /// If `n` is the length of the source slice, there are `2^n` subsequences.
+///
 /// Resets after returning `None`.
 impl<'a, 'b, T> Iterator for Subsequences<'a, T> where T: 'a + Clone {
     type Item = &'b [T];
@@ -128,6 +132,45 @@ impl<'a, 'b, T> Iterator for Subsequences<'a, T> where T: 'a + Clone {
             _ => assert![false, "Should not happen!"]
         }
         Some(&dest[])
+    }
+}
+
+/// Permutations
+///
+/// The advantage of this implementation over the standard one from `std`
+/// is that the permutations are not copied.
+/// Instead, an immutable slice into the vector is returned.
+// Simply reuse the standard implementation elements
+pub struct Permutations<'a, T> where T: 'a {
+    dest: Vec<T>,
+    swaps: ElementSwaps,
+}
+
+pub trait PermutationsIterator<T> {
+    fn iter_permutations<'a>(&'a self) -> Permutations<'a, T>;
+}
+
+impl<'t, T> PermutationsIterator<T> for &'t [T] where T: 't + Clone {
+    fn iter_permutations<'a>(&'a self) -> Permutations<'a, T> {
+        Permutations {
+            dest: self.to_vec(),
+            swaps: ElementSwaps::new(self.len()),
+        }
+    }
+}
+
+impl<'a, 'b, T> Iterator for Permutations<'a, T> where T: 'a + Clone {
+    type Item = &'b [T];
+    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
+        let Permutations {
+            ref mut dest,
+            ref mut swaps,
+        } = *self;
+        match swaps.next() {
+            None => None,
+            Some((0, 0)) => Some(&dest[]),
+            Some((a, b)) => { dest.swap(a, b); Some(&dest[]) },
+        }
     }
 }
 
@@ -195,11 +238,11 @@ fn combination_count() {
     assert![c.count() == 20];
 }
 
-use std::num::Int;
-
 #[test]
 fn subsequences_count() {
-    let n = 3us;
+    use std::num::Int;
+
+    let n = 6us;
     let v = (0..n).collect::<Vec<usize>>();
     let s = &v[];
     let c = s.iter_subseq();
@@ -207,9 +250,19 @@ fn subsequences_count() {
 }
 
 #[test]
+fn permutations_count() {
+    let n = 6us;
+    let v = (0..n).collect::<Vec<usize>>();
+    let s = &v[];
+    let c = s.iter_permutations();
+    let mut f = 1;
+    for i in 2..(n + 1) { f *= i; } // factorial
+    assert![c.count() == f]
+}
+
+#[test]
 fn product_count() {
-    let n = 5us;
-    let m = 7us;
+    let (n, m) = 5us, 7us;
     let i = 0..n;
     let j = 0..m;
     let p = i.iter_mult(j);
