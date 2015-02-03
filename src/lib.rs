@@ -9,8 +9,9 @@ use std::*;
 pub struct Combinations<'a, T> where T: 'a
 {
     src: &'a [T],
-    dest_opt: Option<Vec<T>>,
+    dest: Vec<T>,
     indices: Vec<usize>,
+    first: bool,
 }
 
 pub trait CombinationsIterator<T>
@@ -24,38 +25,41 @@ impl<'t, T> CombinationsIterator<T> for &'t [T] where T: 't + Clone
         let is = iter::repeat(self.len()-k).take(k).collect::<Vec<usize>>();
         Combinations {
             src: *self,
-            dest_opt: None,
+            dest: self[0..k].to_vec(),
             indices: is,
+            first: true,
         }
     }
 }
 
+/// Iterate through all combinations of k elements.
+///
+/// Each iteration yields a slice of length `k` with distinct elements from the
+/// stored sequence in the same order. If `n` is the length of the source slice,
+/// there are (`n` choose `k`) combinations.
+/// Calls to `.next()` after `None` was output give undefined result.
 impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone
 {
     type Item = &'b [T];
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
         let Combinations {
             src,
-            ref mut dest_opt,
+            ref mut dest,
             ref mut indices,
+            ref mut first,
         } = *self;
         let n = src.len();
-        let k = indices.len();
-        let mut dest = match dest_opt.clone() {
-            None => {
-                let dest = &src[..k];
-                *dest_opt = Some(dest.to_vec());
-                return Some(dest) },
-            Some(dest) => dest };
+        let k = dest.len();
+        if *first { *first = false; return Some(&dest[]) }
         let i_opt = indices.iter().rposition(|&j| { j != 0 });
         match i_opt {
             None => None,
             Some(i) => {
-                let ii = indices[i];
-                let m = n-ii;
-                let r = m-k+i..m;
-                for j in indices[i..].iter_mut() { *j = ii-1; }
-                (&mut dest[i..]).clone_from_slice(&(self.src)[r]);
+                let h = indices[i];
+                let m = n - h;
+                let r = (m - k + i)..m;
+                for j in indices[i..].iter_mut() { *j = h - 1; }
+                (&mut dest[i..]).clone_from_slice(&src[r]);
                 Some(&dest[])
             }
         }
@@ -64,9 +68,68 @@ impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone
 
 /// Sub-sets/sequences
 ///
-/// More efficient than counter to 2^n and gives directly the subsequence
-/// as a vector.
-pub struct Subsequences<T>;
+/// Gives directly the subsequences as slices of an internal vector.
+// Invariant: dest and indices have the same length
+pub struct Subsequences<'a, T> where T: 'a {
+    src: &'a [T],
+    dest: Vec<T>,
+    indices: Vec<usize>,
+    first: bool,
+}
+
+pub trait SubsequencesIterator<T> {
+    fn iter_subseq<'a>(&'a self) -> Subsequences<'a, T>;
+}
+
+impl<'t, T> SubsequencesIterator<T> for &'t [T] where T: 't {
+    fn iter_subseq<'a>(&'a self) -> Subsequences<'a, T> {
+        Subsequences {
+            src: self,
+            dest: Vec::new(),
+            indices: Vec::new(),
+            first: true,
+        }
+    }
+}
+
+/// Iterate through the subsequences of a stored sequence.
+///
+/// If `n` is the length of the source slice, there are `2^n` subsequences.
+/// Resets after returning `None`.
+impl<'a, 'b, T> Iterator for Subsequences<'a, T> where T: 'a + Clone {
+    type Item = &'b [T];
+    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
+        let Subsequences {
+            src,
+            ref mut dest,
+            ref mut indices,
+            ref mut first,
+        } = *self;
+        // The first call returns an empty slice
+        if *first { *first = false; return Some(&dest[]) }
+        let n = src.len();
+        let i = indices.last().map_or(0, |&i| { i+1 });
+        // Push an element while we can
+        if i < n {
+            indices.push(i);
+            dest.push(src[i].clone());
+            return Some(&dest[])
+        }
+        // The end of the input is reached,
+        // pop and increment the previous index
+        indices.pop();
+        dest.pop();
+        match (indices.last_mut(), dest.last_mut()) {
+            (None, None) => { *first = true; return None }, // Wrap around
+            (Some(i), Some(x)) => {
+                *i += 1;
+                *x = src[*i].clone();
+            },
+            _ => assert![false, "Should not happen!"]
+        }
+        Some(&dest[])
+    }
+}
 
 /// Product of iterators
 ///
@@ -123,7 +186,7 @@ impl<A, B, I, J> Iterator for Product<A, B, I, J> where
 // - Partitions
 
 #[test]
-fn combination_size() {
+fn combination_count() {
     let n = 6us;
     let k = 3us;
     let v = (0..n).collect::<Vec<usize>>();
@@ -132,8 +195,19 @@ fn combination_size() {
     assert![c.count() == 20];
 }
 
+use std::num::Int;
+
 #[test]
-fn product_size() {
+fn subsequences_count() {
+    let n = 3us;
+    let v = (0..n).collect::<Vec<usize>>();
+    let s = &v[];
+    let c = s.iter_subseq();
+    assert![c.count() == 2us.pow(n)];
+}
+
+#[test]
+fn product_count() {
     let n = 5us;
     let m = 7us;
     let i = 0..n;
