@@ -6,9 +6,7 @@ use std::slice::ElementSwaps;
 /// An iterator over combinations of `k` elements in a list of `n`.
 // The i-th cell of dest can contain an element from src with index
 // j between i and n-k+i. indices[i] records the difference n-k+i-j.
-// The Option distinguishes the first call to .next() which initializes
-// dest, and the subsequent ones, which modify dest before returning it
-// as a slice.
+// The bool distinguishes the first call to .next() from the subsequent ones.
 pub struct Combinations<'a, T> where T: 'a
 {
     src: &'a [T],
