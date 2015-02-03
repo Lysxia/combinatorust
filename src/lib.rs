@@ -1,6 +1,6 @@
 use std::*;
 
-// - Combinations
+/// Iterator for combinations of k elements in a list of n
 // The i-th cell of dest can contain an element from src with index
 // j between i and n-k+i. indices[i] records the difference n-k+i-j.
 // The Option distinguishes the first call to .next() which initializes
@@ -62,12 +62,16 @@ impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone
     }
 }
 
-// - Sub-sets/sequences (more efficient than counter to 2^n and gives
-// directly the subsequence as a vector)
+/// Sub-sets/sequences
+///
+/// More efficient than counter to 2^n and gives directly the subsequence
+/// as a vector.
 pub struct Subsequences<T>;
 
-// - Tuples
-// A product is a variant of iter::FlatMap with an almost constant iterator
+/// Product of iterators
+///
+/// A product is a variant of iter::FlatMap with a constant iterator
+/// Not very useful, as this is simply a nested loop...
 pub struct Product<A, B, I, J> where
     I: Iterator<Item=A>,
     J: Clone + Iterator<Item=B>,
