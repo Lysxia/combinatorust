@@ -7,21 +7,18 @@ use std::slice::ElementSwaps;
 // The i-th cell of dest can contain an element from src with index
 // j between i and n-k+i. indices[i] records the difference n-k+i-j.
 // The bool distinguishes the first call to .next() from the subsequent ones.
-pub struct Combinations<'a, T> where T: 'a
-{
+pub struct Combinations<'a, T> where T: 'a {
     src: &'a [T],
     dest: Vec<T>,
     indices: Vec<usize>,
     first: bool,
 }
 
-pub trait CombinationsIterator<T>
-{
+pub trait CombinationsIterator<T> {
     fn iter_comb<'a>(&'a self, k: usize) -> Combinations<'a, T>;
 }
 
-impl<'t, T> CombinationsIterator<T> for &'t [T] where T: 't + Clone
-{
+impl<'t, T> CombinationsIterator<T> for &'t [T] where T: 't + Clone {
     fn iter_comb<'a>(&'a self, k: usize) -> Combinations<'a, T> {
         let is = iter::repeat(self.len()-k).take(k).collect::<Vec<usize>>();
         Combinations {
@@ -41,8 +38,7 @@ impl<'t, T> CombinationsIterator<T> for &'t [T] where T: 't + Clone
 ///
 /// Calls to `.next()` after `None` has been output give undefined results.
 /// (In practice, currently, it keeps returning `None`)
-impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone
-{
+impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone {
     type Item = &'b [T];
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
         let Combinations {
