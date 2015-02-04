@@ -59,7 +59,7 @@ impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone
             None => None,
             Some(i) => {
                 let h = indices[i];
-                let m = n - h;
+                let m = n - h + 1;
                 let r = (m - k + i)..m;
                 for j in indices[i..].iter_mut() { *j = h - 1; }
                 (&mut dest[i..]).clone_from_slice(&src[r]);
