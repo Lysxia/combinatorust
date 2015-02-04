@@ -11,7 +11,7 @@ mod tests {
          $([use $($i: ident)::*;],)* // Imports
          { $($s: stmt;)* }, // Definitions and initialization
          iter: $it: expr, // Iterator to test
-         count:$x_count:expr) => { // Number of expected iterations
+         count: $x_count:expr) => { // Number of expected iterations
             #[test]
             fn $test_fn() {
                 $(use $($i)::*;)*
@@ -35,7 +35,7 @@ mod tests {
     iter_test!(
         combinations_count,
         { let n = 6us; let k = 3us; },
-        iter: (0..n).collect::<Vec<usize>>()[].iter_comb(k),
+        iter: (0..n).collect::<Vec<usize>>().combinations(k),
         count: choose(n, k)
     );
 
@@ -43,21 +43,21 @@ mod tests {
         subsequences_count,
         [ use std::num::Int; ],
         { let n = 6us; },
-        iter: (0..n).collect::<Vec<usize>>()[].iter_subseq(),
+        iter: (0..n).collect::<Vec<usize>>().subsequences(),
         count: 2us.pow(n)
     );
 
     iter_test!(
         permutations_count,
         { let n = 6us; },
-        iter: (0..n).collect::<Vec<usize>>()[].iter_permutations(),
+        iter: (0..n).collect::<Vec<usize>>().permutations_iter(),
         count: { let mut f = 1; for i in 2..(n + 1) { f *= i } f }
     );
 
     iter_test!(
         product_count,
         { let (n, m) = (5us, 7us); },
-        iter: (0..n).iter_mult(0..m),
+        iter: Product::new(0..n, 0..m),
         count: n * m
     );
 }

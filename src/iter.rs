@@ -15,14 +15,14 @@ pub struct Combinations<'a, T> where T: 'a {
 }
 
 pub trait CombinationsIterator<T> {
-    fn iter_comb<'a>(&'a self, k: usize) -> Combinations<'a, T>;
+    fn combinations<'a>(&'a self, k: usize) -> Combinations<'a, T>;
 }
 
-impl<'t, T> CombinationsIterator<T> for &'t [T] where T: 't + Clone {
-    fn iter_comb<'a>(&'a self, k: usize) -> Combinations<'a, T> {
+impl<T: Clone> CombinationsIterator<T> for [T] {
+    fn combinations<'a>(&'a self, k: usize) -> Combinations<'a, T> {
         let is = iter::repeat(self.len()-k).take(k).collect::<Vec<usize>>();
         Combinations {
-            src: *self,
+            src: self,
             dest: self[0..k].to_vec(),
             indices: is,
             first: true,
@@ -77,11 +77,11 @@ pub struct Subsequences<'a, T> where T: 'a {
 }
 
 pub trait SubsequencesIterator<T> {
-    fn iter_subseq<'a>(&'a self) -> Subsequences<'a, T>;
+    fn subsequences<'a>(&'a self) -> Subsequences<'a, T>;
 }
 
-impl<'t, T> SubsequencesIterator<T> for &'t [T] where T: 't {
-    fn iter_subseq<'a>(&'a self) -> Subsequences<'a, T> {
+impl<T> SubsequencesIterator<T> for [T] {
+    fn subsequences<'a>(&'a self) -> Subsequences<'a, T> {
         Subsequences {
             src: self,
             dest: Vec::new(),
@@ -143,11 +143,11 @@ pub struct Permutations<'a, T> where T: 'a {
 }
 
 pub trait PermutationsIterator<T> {
-    fn iter_permutations<'a>(&'a self) -> Permutations<'a, T>;
+    fn permutations_iter<'a>(&'a self) -> Permutations<'a, T>;
 }
 
-impl<'t, T> PermutationsIterator<T> for &'t [T] where T: 't + Clone {
-    fn iter_permutations<'a>(&'a self) -> Permutations<'a, T> {
+impl<T> PermutationsIterator<T> for [T] where T: Clone {
+    fn permutations_iter<'a>(&'a self) -> Permutations<'a, T> {
         Permutations {
             dest: self.to_vec(),
             swaps: ElementSwaps::new(self.len()),
@@ -175,45 +175,36 @@ impl<'a, 'b, T> Iterator for Permutations<'a, T> where T: 'a + Clone {
 /// A `Product` is a variant of `std::iter::FlatMap` with a constant iterator.
 ///
 /// Not very useful, as it can simply be replaced with a nested loop...
-pub struct Product<A, B, I, J> where
-    I: Iterator<Item=A>,
-    J: Clone + Iterator<Item=B>,
-{
+pub struct Product<I: Iterator, J> {
     iter_b_const: J,
-    cur_a: Option<A>,
+    cur_a: Option<I::Item>,
     iter_a: I,
     iter_b: J,
 }
 
-pub trait ProductIterator<A, B, J>: Sized + Iterator<Item=A> where
-    J: Clone + Iterator<Item=B>,
+impl<I: Sized + Iterator, J: Clone + Iterator> Product<I, J> where
+    I::Item: Clone
 {
-    fn iter_mult(mut self, j: J) -> Product<A, B, Self, J>
+    pub fn new(mut i: I, j: J) -> Self
     {
         Product {
             iter_b_const: j.clone(),
-            cur_a: self.next(),
-            iter_a: self,
+            cur_a: i.next(),
+            iter_a: i,
             iter_b: j }
     }
 }
 
-impl<A, B, I, J> ProductIterator<A, B, J> for I where
-    I: Iterator<Item=A>,
-    J: Clone + Iterator<Item=B>,
-{}
-
-impl<A, B, I, J> Iterator for Product<A, B, I, J> where
-    A: Clone,
-    B: Clone,
-    I: Iterator<Item=A>,
-    J: Clone + Iterator<Item=B>,
+impl<I: Iterator, J: Clone + Iterator> Iterator for Product<I, J> where
+    I::Item: Clone
 {
-    type Item = (A, B);
+    type Item = (I::Item, J::Item);
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        loop { // This loops infinitely if self.iter_b is empty
+        // This loops infinitely if self.iter_b is empty
+        // and self.iter_a is infinite.
+        loop {
             match (self.cur_a.as_ref(), self.iter_b.next()) {
-                (Some(x), Some(y)) => return Some((x.clone(), y.clone())),
+                (Some(x), Some(y)) => return Some((x.clone(), y)),
                 (None, _) => return None,
                 _ => {}
             }
