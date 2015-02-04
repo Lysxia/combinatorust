@@ -35,7 +35,7 @@ mod tests {
     iter_test!(
         combinations_count,
         { let n = 6us; let k = 3us; },
-        iter: (&(0..n).collect::<Vec<usize>>()[]).iter_comb(k),
+        iter: (0..n).collect::<Vec<usize>>()[].iter_comb(k),
         count: choose(n, k)
     );
 
@@ -43,14 +43,14 @@ mod tests {
         subsequences_count,
         [ use std::num::Int; ],
         { let n = 6us; },
-        iter: (&(0..n).collect::<Vec<usize>>()[]).iter_subseq(),
+        iter: (0..n).collect::<Vec<usize>>()[].iter_subseq(),
         count: 2us.pow(n)
     );
 
     iter_test!(
         permutations_count,
         { let n = 6us; },
-        iter: (&(0..n).collect::<Vec<usize>>()[]).iter_permutations(),
+        iter: (0..n).collect::<Vec<usize>>()[].iter_permutations(),
         count: { let mut f = 1; for i in 2..(n + 1) { f *= i } f }
     );
 

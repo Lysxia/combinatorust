@@ -53,7 +53,7 @@ impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone
         } = *self;
         let n = src.len();
         let k = dest.len();
-        if *first { *first = false; return Some(&dest[]) }
+        if *first { *first = false; return Some(&dest) }
         let i_opt = indices.iter().rposition(|&j| { j != 0 });
         match i_opt {
             None => None,
@@ -62,8 +62,8 @@ impl<'a, 'b, T> Iterator for Combinations<'a, T> where T: 'a + Clone
                 let m = n - h + 1;
                 let r = (m - k + i)..m;
                 for j in indices[i..].iter_mut() { *j = h - 1; }
-                (&mut dest[i..]).clone_from_slice(&src[r]);
-                Some(&dest[])
+                dest[i..].clone_from_slice(&src[r]);
+                Some(&dest)
             }
         }
     }
@@ -110,14 +110,14 @@ impl<'a, 'b, T> Iterator for Subsequences<'a, T> where T: 'a + Clone {
             ref mut first,
         } = *self;
         // The first call returns an empty slice
-        if *first { *first = false; return Some(&dest[]) }
+        if *first { *first = false; return Some(&dest) }
         let n = src.len();
         let i = indices.last().map_or(0, |&i| { i+1 });
         // Push an element while we can
         if i < n {
             indices.push(i);
             dest.push(src[i].clone());
-            return Some(&dest[])
+            return Some(&dest)
         }
         // The end of the input is reached,
         // pop and increment the previous index
@@ -131,7 +131,7 @@ impl<'a, 'b, T> Iterator for Subsequences<'a, T> where T: 'a + Clone {
             },
             _ => assert![false, "Should not happen!"]
         }
-        Some(&dest[])
+        Some(&dest)
     }
 }
 
@@ -168,8 +168,8 @@ impl<'a, 'b, T> Iterator for Permutations<'a, T> where T: 'a + Clone {
         } = *self;
         match swaps.next() {
             None => None,
-            Some((0, 0)) => Some(&dest[]),
-            Some((a, b)) => { dest.swap(a, b); Some(&dest[]) },
+            Some((0, 0)) => Some(&dest),
+            Some((a, b)) => { dest.swap(a, b); Some(&dest) },
         }
     }
 }
