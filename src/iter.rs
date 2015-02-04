@@ -263,6 +263,16 @@ impl Catalan {
 ///
 ///     0 + (1 + (2 + ((3 + (4 + 5)) + 6)))
 ///
+/// # Algorithm for `next()`
+///
+/// From this state (`j != 0`, `*`: cells left intact):
+///
+///     0 0 0 ... 0 0 0 ... 0 j * ...
+///
+/// the next one is
+///
+///     0 1 2 ... j-2 j-1 j-1 ... j-1 j-1 * ...
+///
 impl<'a> Iterator for Catalan {
     type Item = &'a [usize];
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
