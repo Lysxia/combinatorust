@@ -60,5 +60,12 @@ mod tests {
         iter: Product::new(0..n, 0..m),
         count: n * m
     );
+
+    iter_test!(
+        catalan_count,
+        { let n = 6us; },
+        iter: Catalan::new(n + 1),
+        count: choose(2 * n, n) / (n + 1)
+    );
 }
 

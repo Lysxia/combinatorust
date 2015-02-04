@@ -219,5 +219,66 @@ impl<I: Iterator, J: Clone + Iterator> Iterator for Product<I, J> where
     }
 }
 
+/// An iterator over binary trees.
+///
+/// There are `choose(2 * n, n) / (n + 1)` trees with `n + 1` leaves.
+pub struct Catalan {
+    indices: Vec<usize>,
+    first: bool,
+}
+
+impl Catalan {
+    pub fn new(n: usize) -> Catalan {
+        Catalan {
+            indices: (0..n-1).collect(),
+            first: true,
+        }
+    }
+}
+
+/// Iterate through binary trees with n leaves.
+///
+/// The returned slices represent sequences of nodes from the traversals of
+/// binary trees, where a label is the index of the leftmost leaf in the
+/// subtree rooted at the corresponding node.
+///
+/// Alternatively, starting with a sequence of leaves:
+///
+///     0 1 2 3 4 5 6
+///
+/// the slice
+/// 
+///     0 1 2 3 3 4
+///
+/// can be associated with a prefix expression, obtained by inserting an
+/// operator at the corresponding positions between the leaves:
+///
+///     + 0 + 1 + 2 + + 3 + 4 5 6
+///
+/// Brackets reveal the tree structure (with a LISP flavour):
+///
+///     (+ 0 (+ 1 (+ 2 (+ (+ 3 (+ 4 5)) 6))))
+///
+/// That is equivalent to the infix expression:
+///
+///     0 + (1 + (2 + ((3 + (4 + 5)) + 6)))
+///
+impl<'a> Iterator for Catalan {
+    type Item = &'a [usize];
+    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
+        let Catalan { ref mut indices, ref mut first } = *self;
+        if *first { *first = false; return Some(indices) }
+        match indices.iter().position(|&j| { j != 0 }) {
+            None => None,
+            Some(i) => {
+                let j = indices[i];
+                indices.move_from((1..j).collect(), 0, j);
+                for k in indices[j..(i + 1)].iter_mut() { *k = j-1 }
+                Some(indices)
+            }
+        }
+    }
+}
+
 // - Partitions
 
