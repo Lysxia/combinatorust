@@ -5,10 +5,13 @@ mod tests {
     #[allow(unused_imports)]
     use iter::*;
 
+    // Macro for testing iterators.
     macro_rules! iter_test {
-        ($test_fn: ident, $([use $($i: ident)::*;],)* { $($s: stmt;)* },
-        iter: $it: expr,
-        count:$x_count:expr) => {
+        ($test_fn: ident, // Function name
+         $([use $($i: ident)::*;],)* // Imports
+         { $($s: stmt;)* }, // Definitions and initialization
+         iter: $it: expr, // Iterator to test
+         count:$x_count:expr) => { // Number of expected iterations
             #[test]
             fn $test_fn() {
                 $(use $($i)::*;)*
