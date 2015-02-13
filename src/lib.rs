@@ -1,4 +1,4 @@
-#![feature(collections, core)]
+#![feature(collections)]
 pub mod iter;
 
 mod tests {
