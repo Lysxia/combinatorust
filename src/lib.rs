@@ -34,7 +34,7 @@ mod tests {
 
     iter_test!(
         combinations_count,
-        { let n = 6us; let k = 3us; },
+        { let n = 6usize; let k = 3usize; },
         iter: (0..n).collect::<Vec<usize>>().combinations(k),
         count: choose(n, k)
     );
@@ -42,28 +42,28 @@ mod tests {
     iter_test!(
         subsequences_count,
         [ use std::num::Int; ],
-        { let n = 6us; },
+        { let n = 6usize; },
         iter: (0..n).collect::<Vec<usize>>().subsequences(),
-        count: 2us.pow(n)
+        count: 2usize.pow(n)
     );
 
     iter_test!(
         permutations_count,
-        { let n = 6us; },
+        { let n = 6usize; },
         iter: (0..n).collect::<Vec<usize>>().permutations_iter(),
         count: { let mut f = 1; for i in 2..(n + 1) { f *= i } f }
     );
 
     iter_test!(
         product_count,
-        { let (n, m) = (5us, 7us); },
+        { let (n, m) = (5usize, 7usize); },
         iter: Product::new(0..n, 0..m),
         count: n * m
     );
 
     iter_test!(
         catalan_count,
-        { let n = 6us; },
+        { let n = 6usize; },
         iter: Catalan::new(n + 1),
         count: choose(2 * n, n) / (n + 1)
     );

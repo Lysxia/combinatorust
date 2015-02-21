@@ -98,7 +98,7 @@ impl<T> SubsequencesIterator<T> for [T] {
 /// Resets after returning `None`.
 impl<'a, 'b, T> Iterator for Subsequences<'a, T> where T: 'a + Clone {
     type Item = &'b [T];
-    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
+    fn next<'c>(&'c mut self) -> Option<&'c [T]> {
         let Subsequences {
             src,
             ref mut dest,
@@ -142,17 +142,17 @@ impl<'a, 'b, T> Iterator for Subsequences<'a, T> where T: 'a + Clone {
 ///
 /// Resets after returning `None`.
 // Simply reuse the standard implementation elements
-pub struct Permutations<'a, T> where T: 'a {
+pub struct Permutations<T> {
     dest: Vec<T>,
     swaps: ElementSwaps,
 }
 
 pub trait PermutationsIterator<T> {
-    fn permutations_iter<'a>(&'a self) -> Permutations<'a, T>;
+    fn permutations_iter(&self) -> Permutations<T>;
 }
 
 impl<T> PermutationsIterator<T> for [T] where T: Clone {
-    fn permutations_iter<'a>(&'a self) -> Permutations<'a, T> {
+    fn permutations_iter(&self) -> Permutations<T> {
         Permutations {
             dest: self.to_vec(),
             swaps: ElementSwaps::new(self.len()),
@@ -160,7 +160,7 @@ impl<T> PermutationsIterator<T> for [T] where T: Clone {
     }
 }
 
-impl<'a, 'b, T> Iterator for Permutations<'a, T> where T: 'a + Clone {
+impl<'b, T> Iterator for Permutations<T> where T: Clone {
     type Item = &'b [T];
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
         let Permutations {
