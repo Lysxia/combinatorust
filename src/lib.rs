@@ -1,8 +1,8 @@
 #![feature(collections)]
 pub mod iter;
 
+#[cfg(test)]
 mod tests {
-    #[allow(unused_imports)]
     use iter::*;
 
     // Macro for testing iterators.
@@ -27,7 +27,6 @@ mod tests {
         }
     }
 
-    #[allow(dead_code)]
     fn choose(n: usize, k: usize) -> usize {
         if k == 0 || k == n { 1 } else { choose(n-1, k) + choose(n-1, k-1) }
     }

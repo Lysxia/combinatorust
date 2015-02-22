@@ -244,34 +244,34 @@ impl Catalan {
 ///
 /// Alternatively, starting with a sequence of leaves:
 ///
-///     0 1 2 3 4 5 6
-///
-/// the slice
+/// `0 1 2 3 4 5 6`,
 /// 
-///     0 1 2 3 3 4
+/// the slice
 ///
+/// `0 1 2 3 3 4`
+/// 
 /// can be associated with a prefix expression, obtained by inserting an
 /// operator at the corresponding positions between the leaves:
 ///
-///     + 0 + 1 + 2 + + 3 + 4 5 6
+/// `+ 0 + 1 + 2 + + 3 + 4 5 6`
 ///
 /// Brackets reveal the tree structure (with a LISP flavour):
 ///
-///     (+ 0 (+ 1 (+ 2 (+ (+ 3 (+ 4 5)) 6))))
+/// `(+ 0 (+ 1 (+ 2 (+ (+ 3 (+ 4 5)) 6))))`
 ///
 /// That is equivalent to the infix expression:
 ///
-///     0 + (1 + (2 + ((3 + (4 + 5)) + 6)))
+/// `0 + (1 + (2 + ((3 + (4 + 5)) + 6)))`
 ///
 /// # Algorithm for `next()`
 ///
 /// From this state (`j != 0`, `*`: cells left intact):
 ///
-///     0 0 0 ... 0 0 0 ... 0 j * ...
+/// `0 0 0 ... 0 0 0 ... 0 j * ...`
 ///
 /// the next one is
 ///
-///     0 1 2 ... j-2 j-1 j-1 ... j-1 j-1 * ...
+/// `0 1 2 ... j-2 j-1 j-1 ... j-1 j-1 * ...`
 ///
 impl<'a> Iterator for Catalan {
     type Item = &'a [usize];
@@ -282,7 +282,7 @@ impl<'a> Iterator for Catalan {
             None => None,
             Some(i) => {
                 let j = indices[i];
-                indices.move_from((1..j).collect(), 0, j);
+                indices.move_from((0..j).collect(), 0, j);
                 for k in indices[j..(i + 1)].iter_mut() { *k = j-1 }
                 Some(indices)
             }
